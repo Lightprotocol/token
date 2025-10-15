@@ -6,7 +6,7 @@ pub mod native_mint;
 pub mod state;
 
 pub mod program {
-    pinocchio_pubkey::declare_id!("TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA");
+    pinocchio_pubkey::declare_id!("cTokenmWW8bLPjZEBAUgYy3zKxQZW6VKi7bqNFEVv3m");
 }
 
 /// A "dummy" function with a hint to the compiler that it is unlikely to be

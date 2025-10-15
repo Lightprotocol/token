@@ -19,7 +19,7 @@ use {
 pub mod amount_to_ui_amount;
 pub mod approve;
 pub mod approve_checked;
-pub mod batch;
+// pub mod batch;
 pub mod burn;
 pub mod burn_checked;
 pub mod close_account;
@@ -48,7 +48,7 @@ pub mod shared;
 
 pub use {
     amount_to_ui_amount::process_amount_to_ui_amount, approve::process_approve,
-    approve_checked::process_approve_checked, batch::process_batch, burn::process_burn,
+    approve_checked::process_approve_checked, burn::process_burn,
     burn_checked::process_burn_checked, close_account::process_close_account,
     freeze_account::process_freeze_account, get_account_data_size::process_get_account_data_size,
     initialize_account::process_initialize_account,

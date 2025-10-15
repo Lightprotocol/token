@@ -1,4 +1,4 @@
-use pinocchio::program_error::ProgramError;
+use pinocchio::{msg, program_error::ProgramError};
 
 pub mod account;
 pub mod account_state;
@@ -35,7 +35,7 @@ pub trait Initializable {
 /// The caller must ensure that `bytes` contains a valid representation of `T`.
 #[inline(always)]
 pub unsafe fn load<T: Initializable + Transmutable>(bytes: &[u8]) -> Result<&T, ProgramError> {
-    load_unchecked(bytes).and_then(|t: &T| {
+    load_unchecked(&bytes).and_then(|t: &T| {
         // checks if the data is initialized
         if t.is_initialized()? {
             Ok(t)
@@ -54,10 +54,11 @@ pub unsafe fn load<T: Initializable + Transmutable>(bytes: &[u8]) -> Result<&T, 
 /// The caller must ensure that `bytes` contains a valid representation of `T`.
 #[inline(always)]
 pub unsafe fn load_unchecked<T: Transmutable>(bytes: &[u8]) -> Result<&T, ProgramError> {
-    if bytes.len() != T::LEN {
+    if bytes.len() != T::LEN && bytes.len() != 260 {
+        msg!("invalid account data len");
         return Err(ProgramError::InvalidAccountData);
     }
-    Ok(&*(bytes.as_ptr() as *const T))
+    Ok(&*(bytes[..165].as_ptr() as *const T))
 }
 
 /// Return a mutable reference for an initialized `T` from the given bytes.
@@ -90,8 +91,8 @@ pub unsafe fn load_mut<T: Initializable + Transmutable>(
 pub unsafe fn load_mut_unchecked<T: Transmutable>(
     bytes: &mut [u8],
 ) -> Result<&mut T, ProgramError> {
-    if bytes.len() != T::LEN {
+    if bytes.len() != T::LEN && bytes.len() != 260 {
         return Err(ProgramError::InvalidAccountData);
     }
-    Ok(&mut *(bytes.as_mut_ptr() as *mut T))
+    Ok(&mut *(bytes[..165].as_mut_ptr() as *mut T))
 }
