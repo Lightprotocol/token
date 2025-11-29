@@ -14,6 +14,7 @@ pub fn process_transfer(
     accounts: &[AccountInfo],
     amount: u64,
     expected_decimals: Option<u8>,
+    signer_is_validated: bool,
 ) -> ProgramResult {
     // Accounts expected depend on whether we have the mint `decimals` or not; when
     // we have the mint `decimals`, we expect the mint account to be present.
@@ -127,25 +128,27 @@ pub fn process_transfer(
 
     // Validates the authority (delegate or owner).
 
-    if source_account.delegate() == Some(authority_info.key()) {
-        // SAFETY: `authority_info` is not currently borrowed.
-        unsafe { validate_owner(authority_info.key(), authority_info, remaining)? };
+    if !signer_is_validated {
+        if source_account.delegate() == Some(authority_info.key()) {
+            // SAFETY: `authority_info` is not currently borrowed.
+            unsafe { validate_owner(authority_info.key(), authority_info, remaining)? };
 
-        let delegated_amount = source_account
-            .delegated_amount()
-            .checked_sub(amount)
-            .ok_or(TokenError::InsufficientFunds)?;
+            let delegated_amount = source_account
+                .delegated_amount()
+                .checked_sub(amount)
+                .ok_or(TokenError::InsufficientFunds)?;
 
-        if !self_transfer {
-            source_account.set_delegated_amount(delegated_amount);
+            if !self_transfer {
+                source_account.set_delegated_amount(delegated_amount);
 
-            if delegated_amount == 0 {
-                source_account.clear_delegate();
+                if delegated_amount == 0 {
+                    source_account.clear_delegate();
+                }
             }
+        } else {
+            // SAFETY: `authority_info` is not currently borrowed.
+            unsafe { validate_owner(&source_account.owner, authority_info, remaining)? };
         }
-    } else {
-        // SAFETY: `authority_info` is not currently borrowed.
-        unsafe { validate_owner(&source_account.owner, authority_info, remaining)? };
     }
 
     if self_transfer || amount == 0 {
