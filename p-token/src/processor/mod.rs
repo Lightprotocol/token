@@ -203,7 +203,7 @@ const fn unpack_amount(instruction_data: &[u8]) -> Result<u64, TokenError> {
 
 /// Unpacks a `u64` amount and an optional `u8` from the instruction data.
 #[inline(always)]
-const fn unpack_amount_and_decimals(instruction_data: &[u8]) -> Result<(u64, u8), TokenError> {
+pub const fn unpack_amount_and_decimals(instruction_data: &[u8]) -> Result<(u64, u8), TokenError> {
     // expected u64 (8) + u8 (1)
     if instruction_data.len() >= 9 {
         let (amount, decimals) = instruction_data.split_at(U64_BYTES);

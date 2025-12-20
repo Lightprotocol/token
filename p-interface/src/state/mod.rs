@@ -54,6 +54,9 @@ pub unsafe fn load<T: Initializable + Transmutable>(bytes: &[u8]) -> Result<&T, 
 /// The caller must ensure that `bytes` contains a valid representation of `T`.
 #[inline(always)]
 pub unsafe fn load_unchecked<T: Transmutable>(bytes: &[u8]) -> Result<&T, ProgramError> {
+    if bytes.len() < T::LEN {
+        return Err(ProgramError::InvalidAccountData);
+    }
     Ok(&*(bytes[..T::LEN].as_ptr() as *const T))
 }
 
@@ -87,5 +90,8 @@ pub unsafe fn load_mut<T: Initializable + Transmutable>(
 pub unsafe fn load_mut_unchecked<T: Transmutable>(
     bytes: &mut [u8],
 ) -> Result<&mut T, ProgramError> {
+    if bytes.len() < T::LEN {
+        return Err(ProgramError::InvalidAccountData);
+    }
     Ok(&mut *(bytes[..T::LEN].as_mut_ptr() as *mut T))
 }
