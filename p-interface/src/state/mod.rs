@@ -8,6 +8,12 @@ pub mod multisig;
 /// Type alias for fields represented as `COption`.
 pub type COption<T> = ([u8; 4], T);
 
+/// AccountType discriminator for Mint accounts (at byte 82 for extended mints).
+pub const ACCOUNT_TYPE_MINT: u8 = 1;
+
+/// AccountType discriminator for Token accounts (at byte 165 for extended accounts).
+pub const ACCOUNT_TYPE_TOKEN_ACCOUNT: u8 = 2;
+
 /// Marker trait for types that can be cast from a raw pointer.
 ///
 /// # Safety
@@ -20,6 +26,10 @@ pub unsafe trait Transmutable {
     ///
     /// This must be equal to the size of each individual field in the type.
     const LEN: usize;
+
+    /// The expected AccountType discriminator value at byte offset `LEN` for extended accounts.
+    /// Used to validate account type when `bytes.len() > LEN`.
+    const ACCOUNT_TYPE: u8;
 }
 
 /// Trait to represent a type that can be initialized.
@@ -45,9 +55,15 @@ pub unsafe fn load<T: Initializable + Transmutable>(bytes: &[u8]) -> Result<&T, 
     })
 }
 
+/// Byte offset of AccountType discriminator in extended accounts.
+pub const ACCOUNT_TYPE_OFFSET: usize = 165;
+
 /// Return a `T` reference from the given bytes.
 ///
 /// This function does not check if the data is initialized.
+///
+/// When `bytes.len() > 165` (extended account), validates the AccountType
+/// discriminator at byte 165 matches `T::ACCOUNT_TYPE`.
 ///
 /// # Safety
 ///
@@ -55,6 +71,10 @@ pub unsafe fn load<T: Initializable + Transmutable>(bytes: &[u8]) -> Result<&T, 
 #[inline(always)]
 pub unsafe fn load_unchecked<T: Transmutable>(bytes: &[u8]) -> Result<&T, ProgramError> {
     if bytes.len() < T::LEN {
+        return Err(ProgramError::InvalidAccountData);
+    }
+    // For extended accounts (>165 bytes), validate AccountType at byte 165
+    if bytes.len() > ACCOUNT_TYPE_OFFSET && bytes[ACCOUNT_TYPE_OFFSET] != T::ACCOUNT_TYPE {
         return Err(ProgramError::InvalidAccountData);
     }
     Ok(&*(bytes[..T::LEN].as_ptr() as *const T))
@@ -83,6 +103,9 @@ pub unsafe fn load_mut<T: Initializable + Transmutable>(
 ///
 /// This function does not check if the data is initialized.
 ///
+/// When `bytes.len() > 165` (extended account), validates the AccountType
+/// discriminator at byte 165 matches `T::ACCOUNT_TYPE`.
+///
 /// # Safety
 ///
 /// The caller must ensure that `bytes` contains a valid representation of `T`.
@@ -91,6 +114,10 @@ pub unsafe fn load_mut_unchecked<T: Transmutable>(
     bytes: &mut [u8],
 ) -> Result<&mut T, ProgramError> {
     if bytes.len() < T::LEN {
+        return Err(ProgramError::InvalidAccountData);
+    }
+    // For extended accounts (>165 bytes), validate AccountType at byte 165
+    if bytes.len() > ACCOUNT_TYPE_OFFSET && bytes[ACCOUNT_TYPE_OFFSET] != T::ACCOUNT_TYPE {
         return Err(ProgramError::InvalidAccountData);
     }
     Ok(&mut *(bytes[..T::LEN].as_mut_ptr() as *mut T))

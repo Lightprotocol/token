@@ -87,6 +87,7 @@ impl Mint {
 unsafe impl Transmutable for Mint {
     /// The length of the `Mint` account data.
     const LEN: usize = core::mem::size_of::<Mint>();
+    const ACCOUNT_TYPE: u8 = super::ACCOUNT_TYPE_MINT;
 }
 
 impl Initializable for Mint {

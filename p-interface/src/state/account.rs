@@ -154,6 +154,7 @@ impl Account {
 
 unsafe impl Transmutable for Account {
     const LEN: usize = core::mem::size_of::<Account>();
+    const ACCOUNT_TYPE: u8 = super::ACCOUNT_TYPE_TOKEN_ACCOUNT;
 }
 
 impl Initializable for Account {

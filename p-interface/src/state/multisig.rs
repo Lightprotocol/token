@@ -41,6 +41,8 @@ impl Multisig {
 unsafe impl Transmutable for Multisig {
     /// The length of the `Multisig` account data.
     const LEN: usize = core::mem::size_of::<Multisig>();
+    /// Multisig not supported for extended accounts.
+    const ACCOUNT_TYPE: u8 = 0;
 }
 
 impl Initializable for Multisig {
