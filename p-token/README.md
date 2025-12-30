@@ -122,6 +122,8 @@ process_transfer(accounts, amount, expected_decimals, signer_is_validated)?;
 
 **Batch module:** Commented out in mod.rs. Batch instruction processing (discriminator 255) currently disabled.
 
+**Wrapped SOL (native mint):** Transfers of wrapped SOL accounts are not supported. The native mint lamport transfer logic in `src/processor/shared/transfer.rs` is commented out, and transfers will return `NativeNotSupported` error.
+
 ## License
 
 The code is licensed under the [Apache License Version 2.0](LICENSE)
