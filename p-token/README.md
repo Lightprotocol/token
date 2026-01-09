@@ -36,9 +36,9 @@ Added `signer_is_validated: bool` parameter to transfer functions.
 
 ### 2. Account Size Validation with AccountType Check
 
-**path:** `../p-interface/src/state/mod.rs:58-81, 102-124`
+**path:** `../p-interface/src/state/mod.rs:61-83, 104-128`
 
-`load_unchecked` and `load_mut_unchecked` now accept accounts larger than `T::LEN` and validate AccountType.
+`load_unchecked` and `load_mut_unchecked` validate account data with strict type checking.
 
 **before:**
 ```rust
@@ -50,24 +50,32 @@ Ok(&*(bytes.as_ptr() as *const T))
 
 **after:**
 ```rust
-if bytes.len() < T::LEN {
-    return Err(ProgramError::InvalidAccountData);
+if bytes.len() == T::LEN {
+    return Ok(&*(bytes[..T::LEN].as_ptr() as *const T));
 }
-// For extended accounts (>165 bytes), validate AccountType at byte 165
-if bytes.len() > ACCOUNT_TYPE_OFFSET && bytes[ACCOUNT_TYPE_OFFSET] != T::ACCOUNT_TYPE {
-    return Err(ProgramError::InvalidAccountData);
+if bytes.len() > ACCOUNT_TYPE_OFFSET && bytes[ACCOUNT_TYPE_OFFSET] == T::ACCOUNT_TYPE {
+    return Ok(&*(bytes[..T::LEN].as_ptr() as *const T));
 }
-Ok(&*(bytes[..T::LEN].as_ptr() as *const T))
+Err(ProgramError::InvalidAccountData)
 ```
 
-**purpose:** Enables processing of Token-2022 extension accounts (165+ bytes) while preventing type confusion.
+**accepts:**
+- Exact length match: `bytes.len() == T::LEN` (standard accounts)
+- Extended accounts: `bytes.len() > 165` with matching AccountType at byte 165
+
+**rejects:**
+- Too short: `bytes.len() < T::LEN`
+- Ambiguous size: `T::LEN < bytes.len() <= 165` (cannot verify type)
+- Wrong AccountType: extended account with mismatched discriminator
+
+**purpose:** Enables processing of Token-2022 extension accounts while preventing type confusion attacks.
 
 **security:**
-- Minimum size validated to prevent buffer underflow
 - AccountType discriminator at byte 165 validated for extended accounts:
   - `ACCOUNT_TYPE_MINT = 1` for Mint accounts
   - `ACCOUNT_TYPE_TOKEN_ACCOUNT = 2` for Token accounts
-- Prevents loading a Mint as Account or vice versa when extensions present
+- Prevents loading a Token account (165 bytes) as Mint (82 bytes) by rejecting ambiguous sizes
+- Prevents loading extended accounts with wrong AccountType
 
 ### 3. Library Conversion
 
