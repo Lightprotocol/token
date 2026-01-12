@@ -3064,6 +3064,7 @@ version = "0.0.0"
 dependencies = [
  "pinocchio",
  "pinocchio-pubkey",
+ "rand 0.8.5",
  "strum 0.27.1",
  "strum_macros 0.27.1",
 ]

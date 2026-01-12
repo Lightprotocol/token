@@ -8,10 +8,12 @@ pub mod multisig;
 /// Type alias for fields represented as `COption`.
 pub type COption<T> = ([u8; 4], T);
 
-/// AccountType discriminator for Mint accounts (at byte 82 for extended mints).
+/// AccountType discriminator for Mint accounts.
+/// Validation checks byte 165 (ACCOUNT_TYPE_OFFSET) for all extended accounts.
 pub const ACCOUNT_TYPE_MINT: u8 = 1;
 
-/// AccountType discriminator for Token accounts (at byte 165 for extended accounts).
+/// AccountType discriminator for Token accounts.
+/// Validation checks byte 165 (ACCOUNT_TYPE_OFFSET) for all extended accounts.
 pub const ACCOUNT_TYPE_TOKEN_ACCOUNT: u8 = 2;
 
 /// Marker trait for types that can be cast from a raw pointer.
